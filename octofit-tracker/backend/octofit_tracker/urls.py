@@ -17,29 +17,35 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from django.http import HttpResponse
 import os
 
 router = views.router
 
+# Root view voor HTTP 200 op '/'
+def root_view(request):
+    return HttpResponse("<h2>Welkom bij de Octofit Tracker API</h2><p>Ga naar <a href='/api/'>/api/</a> voor de API root.</p>", content_type="text/html")
+
 @api_view(['GET'])
 def api_root(request, format=None):
+    codespace_name = os.environ.get('CODESPACE_NAME')
+    if codespace_name:
+        base_url = f"https://{codespace_name}-8000.app.github.dev/api/"
+    else:
+        base_url = "http://localhost:8000/api/"
     return Response({
-        'users': request.build_absolute_uri('users/'),
-        'teams': request.build_absolute_uri('teams/'),
-        'activities': request.build_absolute_uri('activities/'),
-        'leaderboard': request.build_absolute_uri('leaderboard/'),
-        'workouts': request.build_absolute_uri('workouts/'),
+        'users': base_url + 'users/',
+        'teams': base_url + 'teams/',
+        'activities': base_url + 'activities/',
+        'leaderboard': base_url + 'leaderboard/',
+        'workouts': base_url + 'workouts/',
     })
 
-codespace_name = os.environ.get('CODESPACE_NAME')
-if codespace_name:
-    base_url = f"https://{codespace_name}-8000.app.github.dev"
-else:
-    base_url = "http://localhost:8000"
-
 urlpatterns = [
+    path('', root_view, name='root'),
     path('admin/', admin.site.urls),
     path('api/', api_root, name='api-root'),
     path('api/', include(router.urls)),
